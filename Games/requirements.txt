@@ -1,0 +1,3 @@
+# No external packages required.
+# These games use only Python standard library modules such as tkinter and random.
+
