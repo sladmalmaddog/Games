@@ -25,6 +25,8 @@ python main.py
 - `Sudoku`
 - `Tetris`
 - `Minesweeper`
+- `Solitaire`
+- `Mahjong`
 - `FlappyBird`
 - `TicTacToe`
 - `Battleships`
@@ -33,7 +35,8 @@ python main.py
 - `Chess`
 - `Checkers`
 - `Match3`
+- `BlockBlast`
+- `BrickBlast`
 - `SpaceInvaders`
 - `2048`
 - `Pong`
-

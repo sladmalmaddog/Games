@@ -20,6 +20,7 @@ class Minesweeper:
         self.flags = set()
         self.buttons = {}
         self.game_over = False
+        self.flag_mode = False
 
         tk.Label(
             self.root,
@@ -31,12 +32,13 @@ class Minesweeper:
 
         self.status = tk.Label(
             self.root,
-            text=f"{MINES} mines. Left click digs, right click flags.",
+            text=f"{MINES} mines. Dig mode. Right click or Flag Mode marks flags.",
             font=("Segoe UI", 11),
             bg="#f1f5f9",
             fg="#475569",
         )
         self.status.pack(pady=(0, 10))
+        self.root.bind("f", lambda _event: self.toggle_flag_mode())
 
         frame = tk.Frame(self.root, bg="#475569", padx=3, pady=3)
         frame.pack()
@@ -52,14 +54,18 @@ class Minesweeper:
                     bg="#cbd5e1",
                     activebackground="#e2e8f0",
                     relief="raised",
-                    command=lambda r=row, c=col: self.reveal(r, c),
+                    command=lambda r=row, c=col: self.cell_clicked(r, c),
                 )
                 button.grid(row=row, column=col, padx=1, pady=1)
                 button.bind("<Button-3>", lambda event, r=row, c=col: self.flag(r, c))
+                button.bind("<Button-2>", lambda event, r=row, c=col: self.flag(r, c))
                 self.buttons[(row, col)] = button
 
+        controls = tk.Frame(self.root, bg="#f1f5f9")
+        controls.pack(pady=12)
+
         tk.Button(
-            self.root,
+            controls,
             text="New Field",
             font=("Segoe UI", 11, "bold"),
             bg="#334155",
@@ -67,16 +73,57 @@ class Minesweeper:
             activebackground="#1e293b",
             activeforeground="white",
             command=self.reset,
-        ).pack(pady=12)
+        ).pack(side="left", padx=5)
+
+        self.flag_button = tk.Button(
+            controls,
+            text="Flag Mode: Off",
+            font=("Segoe UI", 11, "bold"),
+            bg="#f59e0b",
+            fg="white",
+            activebackground="#d97706",
+            activeforeground="white",
+            command=self.toggle_flag_mode,
+        )
+        self.flag_button.pack(side="left", padx=5)
+
+        self.reset()
 
     def reset(self):
         self.board = None
         self.revealed.clear()
         self.flags.clear()
         self.game_over = False
-        self.status.config(text=f"{MINES} mines. Left click digs, right click flags.")
+        self.flag_mode = False
+        self.flag_button.config(text="Flag Mode: Off", bg="#f59e0b")
+        self.update_status("New field ready.")
         for button in self.buttons.values():
             button.config(text="", bg="#cbd5e1", fg="#0f172a", state="normal", relief="raised")
+
+    def update_status(self, message=None):
+        mode = "Flag mode" if self.flag_mode else "Dig mode"
+        prefix = f"{mode}. Flags: {len(self.flags)} / {MINES}."
+        if message:
+            self.status.config(text=f"{prefix} {message}")
+        else:
+            self.status.config(text=prefix)
+
+    def toggle_flag_mode(self):
+        if self.game_over:
+            return
+        self.flag_mode = not self.flag_mode
+        if self.flag_mode:
+            self.flag_button.config(text="Flag Mode: On", bg="#dc2626")
+            self.update_status("Click cells to place or remove flags.")
+        else:
+            self.flag_button.config(text="Flag Mode: Off", bg="#f59e0b")
+            self.update_status("Click cells to dig.")
+
+    def cell_clicked(self, row, col):
+        if self.flag_mode:
+            self.flag(row, col)
+        else:
+            self.reveal(row, col)
 
     def make_board(self, safe_row, safe_col):
         mines = set()
@@ -115,13 +162,14 @@ class Minesweeper:
         else:
             self.flags.add((row, col))
             button.config(text="F", bg="#fde68a", fg="#92400e")
-        self.status.config(text=f"Flags: {len(self.flags)} / {MINES}")
+        self.update_status()
 
     def reveal(self, row, col):
         if self.game_over or (row, col) in self.flags:
             return
         if self.board is None:
             self.make_board(row, col)
+            self.update_status("First dig is safe.")
         if self.board[row][col] == -1:
             self.lose()
             return
@@ -180,4 +228,3 @@ class Minesweeper:
 
 if __name__ == "__main__":
     Minesweeper().run()
-
